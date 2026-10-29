@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Needs Assessment</title>
+<meta name="description" content="Twenty yes/no questions that map how well each level of Maslow's hierarchy of needs is met right now.">
+<style>
+:root {
+  --bg: #000;
+  --surface: #121212;
+  --line: #2a2a2a;
+  --text: #f2f2f2;
+  --muted: #9a9a9a;
+  --empty: #222;
+  --high: #5c9e86;
+  --mid: #d4ad62;
+  --low: #c47f5f;
+  --accent: #f2f2f2;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px calc(120px + env(safe-area-inset-bottom));
+}
+h1 { font-size: 1.6rem; line-height: 1.2; margin: 8px 0 8px; letter-spacing: -0.01em; }
+.intro { color: var(--muted); margin: 0 0 24px; }
+
+section.level { margin: 0 0 28px; }
+.level-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.level-head h2 { font-size: 1.1rem; margin: 0; }
+.level-head .count { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .9rem; }
+.level-sub { color: var(--muted); margin: 0 0 12px; font-size: .95rem; }
+
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  margin: 0 0 10px;
+  padding: 14px;
+}
+legend { float: left; width: 100%; padding: 0; margin: 0 0 12px; }
+legend .n { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.choices { clear: both; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choices input { position: absolute; opacity: 0; pointer-events: none; }
+.choices label {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.choices input:checked + label { background: var(--accent); color: #000; border-color: var(--accent); }
+.choices input:focus-visible + label { outline: 2px solid var(--high); outline-offset: 2px; }
+
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.92);
+  border-top: 1px solid var(--line);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.bar-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.progress { flex: 1; min-width: 0; }
+.progress-text { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.track { height: 4px; background: var(--empty); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.track i { display: block; height: 100%; width: 0; background: var(--high); transition: width .2s; }
+
+button.primary {
+  min-height: 48px; padding: 0 20px;
+  border: 0; border-radius: 12px;
+  background: var(--accent); color: #000;
+  font: inherit; font-weight: 700;
+  cursor: pointer;
+}
+button.primary:disabled { background: var(--empty); color: var(--muted); cursor: not-allowed; }
+
+#results h1 { text-align: center; }
+.pyramid { display: block; width: 100%; max-width: 520px; margin: 16px auto 24px; }
+.pyramid .empty { fill: var(--empty); }
+.pyramid .fill { transform-box: fill-box; transform-origin: 0 0; transform: scaleX(0); transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+.pyramid text {
+  fill: var(--text); font-weight: 700; font-size: 26px;
+  text-anchor: middle; dominant-baseline: central;
+  paint-order: stroke; stroke: rgba(0,0,0,.35); stroke-width: 3px;
+}
+.scores { list-style: none; margin: 0 0 32px; padding: 0; }
+.scores li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.scores li span:first-child { display: flex; align-items: center; gap: 10px; }
+.scores .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.scores b { font-variant-numeric: tabular-nums; font-size: 1.1rem; }
+.center { text-align: center; }
+
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .pyramid .fill, .track i { transition: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <form id="quiz" novalidate>
+    <h1>Your needs assessment</h1>
+    <p class="intro">Answer based on how your life feels right now, not how you think it should feel. Choose Yes only if the statement is generally true.</p>
+    <div id="levels"></div>
+    <div class="bar">
+      <div class="bar-inner">
+        <div class="progress" aria-live="polite">
+          <div class="progress-text"><span id="answered">0</span> of 20 answered</div>
+          <div class="track"><i id="track"></i></div>
+        </div>
+        <button class="primary" id="analyze" type="submit" disabled>Analyze my needs</button>
+      </div>
+    </div>
+  </form>
+
+  <section id="results" hidden>
+    <h1>Your pyramid</h1>
+    <svg class="pyramid" id="pyramid" viewBox="0 0 600 500" role="img"></svg>
+    <ul class="scores" id="scores"></ul>
+    <p class="center"><button class="primary" id="retake" type="button">Retake</button></p>
+  </section>
+</main>
+
+<script>
+// Bottom of the pyramid first.
+const LEVELS = [
+  { name: "Physiological", sub: "Your body's fundamental needs", qs: [
+    "I consistently get enough restful sleep.",
+    "I eat enough nutritious food and rarely feel deprived.",
+    "I feel physically healthy and energetic most days.",
+    "I have adequate time for rest and physical recovery."
+  ]},
+  { name: "Safety & security", sub: "Stability, predictability, and protection", qs: [
+    "I feel financially secure about my future.",
+    "My home feels safe, comfortable, and stable.",
+    "I feel secure in my employment or ability to earn a living.",
+    "I generally feel in control of my circumstances rather than threatened by uncertainty."
+  ]},
+  { name: "Love & belonging", sub: "Connection, affection, and community", qs: [
+    "I have people with whom I can be emotionally vulnerable.",
+    "I feel loved and genuinely cared for.",
+    "I have satisfying romantic intimacy or feel content without it.",
+    "I feel a sense of belonging to a community or social circle."
+  ]},
+  { name: "Esteem", sub: "Respect, competence, and self-worth", qs: [
+    "I respect and genuinely like the person I am.",
+    "I feel competent and accomplished in my work or pursuits.",
+    "I feel appreciated and respected by people who matter to me.",
+    "My self-worth is relatively stable even when I fail or face rejection."
+  ]},
+  { name: "Self-actualization", sub: "Growth, meaning, and realizing your potential", qs: [
+    "I feel that my life has a meaningful direction.",
+    "I regularly pursue things that challenge me and help me grow.",
+    "I have room to express my creativity and individuality.",
+    "I feel I'm becoming the person I want to be."
+  ]}
+];
+const TOTAL = LEVELS.reduce((n, l) => n + l.qs.length, 0);
+
+const $ = id => document.getElementById(id);
+const form = $("quiz");
+
+// Build the form.
+let n = 0, html = "";
+LEVELS.forEach((lvl, li) => {
+  html += `<section class="level"><div class="level-head"><h2>${li + 1}. ${lvl.name}</h2><span class="count" id="c${li}">0/${lvl.qs.length}</span></div><p class="level-sub">${lvl.sub}</p>`;
+  lvl.qs.forEach(q => {
+    n++;
+    const id = "q" + n;
+    html += `<fieldset data-level="${li}"><legend><span class="n">${n}.</span>${q}</legend><div class="choices">` +
+      `<input type="radio" name="${id}" id="${id}y" value="1"><label for="${id}y">Yes</label>` +
+      `<input type="radio" name="${id}" id="${id}n" value="0"><label for="${id}n">No</label></div></fieldset>`;
+  });
+  html += "</section>";
+});
+$("levels").innerHTML = html;
+
+function tally() {
+  const answered = LEVELS.map(() => 0), yes = LEVELS.map(() => 0);
+  form.querySelectorAll("input:checked").forEach(inp => {
+    const li = +inp.closest("fieldset").dataset.level;
+    answered[li]++;
+    yes[li] += +inp.value;
+  });
+  return { answered, yes };
+}
+
+form.addEventListener("change", () => {
+  const { answered } = tally();
+  const done = answered.reduce((a, b) => a + b, 0);
+  answered.forEach((c, li) => $("c" + li).textContent = `${c}/${LEVELS[li].qs.length}`);
+  $("answered").textContent = done;
+  $("track").style.width = (done / TOTAL * 100) + "%";
+  $("analyze").disabled = done < TOTAL;
+});
+
+const colorFor = p => p >= 75 ? "var(--high)" : p >= 50 ? "var(--mid)" : "var(--low)";
+
+function render(pcts) {
+  // Apex at (300,0), base 600 wide at y=500; half-width grows 0.6 per unit of y.
+  const H = 500, GAP = 10, band = (H - GAP * 4) / 5, k = 0.6, cx = 300;
+  let svg = "";
+  for (let i = 0; i < 5; i++) {               // i = 0 is the top band
+    const li = 4 - i, p = pcts[li];
+    const y0 = i * (band + GAP), y1 = y0 + band;
+    const w0 = y0 * k, w1 = y1 * k;
+    const pts = `${cx - w0},${y0} ${cx + w0},${y0} ${cx + w1},${y1} ${cx - w1},${y1}`;
+    svg += `<clipPath id="b${i}"><polygon points="${pts}"/></clipPath>` +
+      `<polygon class="empty" points="${pts}"/>` +
+      `<g clip-path="url(#b${i})"><rect class="fill" x="${cx - w1}" y="${y0}" height="${band}" width="${2 * w1}" data-s="${p / 100}" fill="${colorFor(p)}"/></g>` +
+      `<text x="${cx}" y="${y0 + band * (i === 0 ? 0.62 : 0.5)}">${p}%</text>`;
+  }
+  const pyr = $("pyramid");
+  pyr.innerHTML = svg;
+  pyr.setAttribute("aria-label", LEVELS.map((l, li) => `${l.name} ${pcts[li]}%`).reverse().join(", "));
+
+  $("scores").innerHTML = LEVELS.map((l, li) =>
+    `<li><span><i class="dot" style="background:${colorFor(pcts[li])}"></i>${l.name}</span><b>${pcts[li]}%</b></li>`
+  ).reverse().join("");
+
+  // Next frame so the grow transition runs.
+  requestAnimationFrame(() => requestAnimationFrame(() =>
+    pyr.querySelectorAll(".fill").forEach(r => r.style.transform = `scaleX(${r.dataset.s})`)));
+}
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const { yes } = tally();
+  render(yes.map((y, li) => Math.round(y / LEVELS[li].qs.length * 100)));
+  form.hidden = true;
+  $("results").hidden = false;
+  window.scrollTo(0, 0);
+});
+
+$("retake").addEventListener("click", () => {
+  form.reset();
+  form.dispatchEvent(new Event("change"));
+  $("results").hidden = true;
+  form.hidden = false;
+  window.scrollTo(0, 0);
+});
+</script>
+</body>
+</html>
